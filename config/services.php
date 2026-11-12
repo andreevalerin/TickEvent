@@ -22,6 +22,14 @@ return [
         'key' => env('RESEND_API_KEY'),
     ],
 
+    'culqi' => [
+        'public_key' => env('CULQI_PUBLIC_KEY'),
+        'secret_key' => env('CULQI_SECRET_KEY'),
+        'rsa_id' => env('CULQI_RSA_ID'),
+        'rsa_public_key' => env('CULQI_RSA_PUBLIC_KEY'),
+        'base_url' => env('CULQI_BASE_URL', 'https://api.culqi.com/v2'),
+    ],
+
     'ses' => [
         'key' => env('AWS_ACCESS_KEY_ID'),
         'secret' => env('AWS_SECRET_ACCESS_KEY'),

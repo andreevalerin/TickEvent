@@ -1,24 +1,42 @@
+@extends('layouts.principal')
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eventos - TickEvent</title>
-</head>
-<body>
+@section('titulo', $titulo . ' - TickEvent')
 
-    <h1>Eventos de TickEvent</h1>
+@section('contenido')
 
-    <h2>Explora nuestros eventos</h2>
+<section class="contenido-evento" style="padding-top: 30px;">
+    <h1>{{ $titulo }}</h1>
 
-    <a href="{{ route('conciertos.index') }}">
-        Ver conciertos
-    </a>
+    <p>Encuentra tus próximos conciertos y partidos.</p>
 
-    <a href="{{ route('partidos.index') }}">
-        Ver partidos
-    </a>
+    @forelse($eventos as $evento)
 
-</body>
-</html>
+        <div class="panel-sectores" style="padding: 20px; margin-bottom: 15px;">
+
+            <span class="etiqueta">
+                {{ strtoupper($evento->categoria) }}
+            </span>
+
+            <h2>{{ $evento->titulo }}</h2>
+
+            <p>
+                {{ $evento->fecha_evento->format('d/m/Y') }}
+                · {{ $evento->lugar }}
+                · {{ $evento->ciudad }}
+            </p>
+
+            <a href="{{ route('eventos.show', $evento) }}">
+                Ver evento y tarifas
+            </a>
+
+        </div>
+
+    @empty
+
+        <p>Por el momento no hay eventos disponibles.</p>
+
+    @endforelse
+
+</section>
+
+@endsection
