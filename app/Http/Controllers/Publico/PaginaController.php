@@ -3,13 +3,13 @@
 namespace App\Http\Controllers\Publico;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use Illuminate\View\View;
 
 class PaginaController extends Controller
 {
-    public function contacto()
+    public function contacto(): View
     {
-        return 'Contacto de TickEvent';
+        return view('publico.contacto');
     }
 
     public function cancelaciones()

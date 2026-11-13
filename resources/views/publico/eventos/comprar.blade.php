@@ -85,7 +85,7 @@
                                             data-zona="{{ $zona->nombre }}"
                                             data-tarifa="{{ $tarifa->nombre }}"
                                             data-precio="{{ $tarifa->precio }}"
-                                            @checked((string) old('tarifa_id') === (string) $tarifa->id)
+                                            @checked((string) old('tarifa_id', $tarifaSeleccionada) === (string) $tarifa->id)
                                             required
                                         >
 

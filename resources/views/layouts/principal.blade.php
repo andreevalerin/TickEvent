@@ -4,18 +4,29 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>@yield('titulo', 'TickEvent')</title>
+    <meta name="description" content="@yield('descripcion', 'Conciertos y partidos en Perú. Encuentra tu próximo evento en TickEvent.')">
+    <link rel="icon" href="{{ asset('imagenes/prototipo/favicon.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ asset('css/tickevent.css') }}">
+    <script src="{{ asset('js/tickevent.js') }}" defer></script>
 </head>
-<body>
+@php($esPublico = request()->routeIs('inicio', 'eventos.index', 'conciertos.index', 'partidos.index', 'eventos.show', 'contacto'))
+<body @class(['te-public' => $esPublico])>
 
-    <header class="encabezado">
-        <div class="encabezado-contenido">
+    <header class="{{ $esPublico ? 'header' : 'encabezado' }}">
+        <div class="{{ $esPublico ? 'shell header-inner' : 'encabezado-contenido' }}">
 
             <a class="logo" href="{{ route('inicio') }}">
-                <span>▣</span>TICKEVENT
+                @if($esPublico)
+                    <span class="logo-mark"><x-icono nombre="ticket" :tamano="22" /></span><strong>TICKEVENT</strong>
+                @else
+                    <span>▣</span>TICKEVENT
+                @endif
             </a>
 
-            <nav class="navegacion">
+            @if($esPublico)
+                <button class="mobile-menu" type="button" data-menu aria-controls="navegacion-principal" aria-expanded="false" aria-label="Abrir menú"><x-icono nombre="menu" /></button>
+            @endif
+            <nav class="{{ $esPublico ? 'nav' : 'navegacion' }}" id="navegacion-principal" aria-label="Navegación principal">
                 <a href="{{ route('eventos.index') }}">Eventos</a>
                 <a href="{{ route('contacto') }}">Contáctanos</a>
 
@@ -24,7 +35,7 @@
                         Iniciar sesión
                     </a>
 
-                    <a href="{{ route('registro') }}" class="registro">
+                    <a href="{{ route('registro') }}" class="{{ $esPublico ? 'btn btn-primary' : 'registro' }}">
                         Registrarse
                     </a>
                 @else

@@ -17,7 +17,7 @@ class TickEventSeeder extends Seeder
             ['email' => 'organizador.demo@tickevent.test'],
             [
                 'name' => 'Organizador de demostración',
-                'password' => Hash::make(Str::random(40))
+                'password' => Hash::make(Str::random(40)),
             ]
         );
 
@@ -29,7 +29,7 @@ class TickEventSeeder extends Seeder
             ['nombre' => 'Occidente 1', 'capacidad' => 811, 'precio' => 545],
             ['nombre' => 'Occidente 2', 'capacidad' => 917, 'precio' => 371],
             ['nombre' => 'Oriente', 'capacidad' => 2028, 'precio' => 371],
-            ['nombre' => 'Norte', 'capacidad' => 4056, 'precio' => 185]
+            ['nombre' => 'Norte', 'capacidad' => 4056, 'precio' => 185],
         ];
 
         $evento = Evento::updateOrCreate(
@@ -42,8 +42,10 @@ class TickEventSeeder extends Seeder
                 'fecha_evento' => '2026-12-12 21:00:00',
                 'lugar' => 'Estadio San Marcos',
                 'ciudad' => 'Lima',
+                'imagen_principal' => 'imagenes/prototipo/event-singer.jpg',
+                'imagen_plano' => 'imagenes/prototipo/robbie-williams-stadium.png',
                 'aforo_total' => array_sum(array_column($sectores, 'capacidad')),
-                'estado' => 'publicado'
+                'estado' => 'publicado',
             ]
         );
 
@@ -51,11 +53,11 @@ class TickEventSeeder extends Seeder
             $zona = Zona::updateOrCreate(
                 [
                     'evento_id' => $evento->id,
-                    'nombre' => $sector['nombre']
+                    'nombre' => $sector['nombre'],
                 ],
                 [
                     'capacidad' => $sector['capacidad'],
-                    'activo' => true
+                    'activo' => true,
                 ]
             );
 
@@ -63,7 +65,7 @@ class TickEventSeeder extends Seeder
                 ['nombre' => 'Regular'],
                 [
                     'precio' => $sector['precio'],
-                    'activo' => true
+                    'activo' => true,
                 ]
             );
         }

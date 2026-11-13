@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Evento extends Model
 {
@@ -23,11 +24,11 @@ class Evento extends Model
         'aforo_total',
         'imagen_principal',
         'imagen_plano',
-        'estado'
+        'estado',
     ];
 
     protected $casts = [
-        'fecha_evento' => 'datetime'
+        'fecha_evento' => 'datetime',
     ];
 
     public function organizador(): BelongsTo
@@ -38,6 +39,11 @@ class Evento extends Model
     public function zonas(): HasMany
     {
         return $this->hasMany(Zona::class);
+    }
+
+    public function tarifas(): HasManyThrough
+    {
+        return $this->hasManyThrough(Tarifa::class, Zona::class);
     }
 
     public function personalAcceso()
