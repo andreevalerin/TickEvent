@@ -9,6 +9,7 @@ use App\Models\Pago;
 use App\Models\Tarifa;
 use App\Models\Zona;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -51,7 +52,45 @@ class EventoController extends Controller
             'ingresos_centimos' => $eventos->sum('ingresos_centimos'),
         ];
 
-        return view('organizador.eventos.index', compact('eventos', 'metricas'));
+        $conteos = [
+            'todos' => $eventos->count(),
+            'proximos' => $eventos->where('estado', 'publicado')->where('fecha_evento', '>=', now())->count(),
+            'pasados' => $eventos->where('fecha_evento', '<', now())->count(),
+            'borradores' => $eventos->where('estado', 'borrador')->count(),
+        ];
+        $filtro = in_array($request->input('filtro'), ['proximos', 'pasados', 'borradores'], true)
+            ? $request->input('filtro')
+            : 'todos';
+        $orden = in_array($request->input('orden'), ['recientes', 'antiguos', 'titulo'], true)
+            ? $request->input('orden')
+            : 'recientes';
+        $busqueda = trim($request->string('q')->toString());
+        $filtrados = $eventos
+            ->when($filtro === 'proximos', fn ($coleccion) => $coleccion->where('estado', 'publicado')->where('fecha_evento', '>=', now()))
+            ->when($filtro === 'pasados', fn ($coleccion) => $coleccion->where('fecha_evento', '<', now()))
+            ->when($filtro === 'borradores', fn ($coleccion) => $coleccion->where('estado', 'borrador'))
+            ->when($busqueda !== '', function ($coleccion) use ($busqueda) {
+                $texto = mb_strtolower($busqueda);
+
+                return $coleccion->filter(fn ($evento) => str_contains(mb_strtolower($evento->titulo), $texto)
+                    || str_contains(mb_strtolower($evento->lugar), $texto)
+                    || str_contains(mb_strtolower($evento->ciudad), $texto));
+            });
+        $filtrados = (match ($orden) {
+            'antiguos' => $filtrados->sortBy('fecha_evento'),
+            'titulo' => $filtrados->sortBy('titulo', SORT_NATURAL | SORT_FLAG_CASE),
+            default => $filtrados->sortByDesc('fecha_evento'),
+        })->values();
+        $pagina = max(1, (int) $request->input('page', 1));
+        $eventos = new LengthAwarePaginator(
+            $filtrados->forPage($pagina, 6)->values(),
+            $filtrados->count(),
+            6,
+            $pagina,
+            ['path' => $request->url(), 'query' => $request->query()]
+        );
+
+        return view('organizador.eventos.index', compact('eventos', 'metricas', 'conteos', 'filtro', 'orden', 'busqueda'));
     }
 
     public function create()

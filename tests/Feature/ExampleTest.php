@@ -91,6 +91,19 @@ class ExampleTest extends TestCase
         $this->assertSame(8, $evento->zonas()->count());
     }
 
+    public function test_la_ficha_publica_muestra_las_tarifas_reales_de_la_base_de_datos(): void
+    {
+        $this->seed(TickEventSeeder::class);
+        $evento = Evento::where('slug', 'robbie-williams')->firstOrFail();
+        $tarifa = Tarifa::whereHas('zona', fn ($consulta) => $consulta->where('evento_id', $evento->id))->firstOrFail();
+        $tarifa->update(['precio' => 432.10]);
+
+        $this->get(route('eventos.show', $evento))
+            ->assertOk()
+            ->assertSee($tarifa->zona->nombre)
+            ->assertSee('S/ 432.10');
+    }
+
     public function test_contacto_y_politicas_utilizan_paginas_blade_completas(): void
     {
         $paginas = [

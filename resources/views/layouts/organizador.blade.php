@@ -11,14 +11,7 @@
         <a class="admin-logo" href="{{ route('organizador.eventos.index') }}" aria-label="TickEvent organizador">
             <img src="{{ asset('imagenes/logo-tickevent.png') }}" alt="TickEvent">
         </a>
-        <div class="admin-cuenta">
-            <span class="admin-avatar organizador-avatar" aria-hidden="true">{{ strtoupper(substr(auth()->user()->name, 0, 2)) }}</span>
-            <span><strong>{{ auth()->user()->name }}</strong><small>Organizador</small></span>
-            <form action="{{ route('logout') }}" method="POST">
-                @csrf
-                <button type="submit" class="admin-salir">Cerrar sesión</button>
-            </form>
-        </div>
+        @include('partials.cuenta-menu', ['rolEtiqueta' => 'Organizador', 'perfilUrl' => route('organizador.perfil')])
     </header>
     <button type="button" class="admin-menu-control" aria-expanded="false" aria-controls="organizador-sidebar">Menú del organizador</button>
     <div class="admin-estructura">

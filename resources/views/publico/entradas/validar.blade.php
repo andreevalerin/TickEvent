@@ -104,6 +104,10 @@
                             <strong>{{ $entrada->tarifa->nombre }}</strong>
                         </div>
                         <div>
+                            <span>Cantidad</span>
+                            <strong>1</strong>
+                        </div>
+                        <div>
                             <span>Código</span>
                             <strong>{{ $entrada->codigo }}</strong>
                         </div>
@@ -117,6 +121,12 @@
                                 <strong>{{ $entrada->usada_en->translatedFormat('D. d M Y, H:i:s') }}</strong>
                             </div>
                         @endif
+                        @if($entrada->validador)
+                            <div>
+                                <span>Operador</span>
+                                <strong>{{ $entrada->validador->name }}</strong>
+                            </div>
+                        @endif
                     </div>
                 @endif
 
@@ -124,6 +134,14 @@
                     <strong>Motivo</strong>
                     <span>{{ $motivo }}</span>
                 </div>
+
+                @if($permitido && $entrada)
+                    <div class="validacion-registro">
+                        <div><strong>Entrada validada correctamente</strong><span>El asistente puede ingresar al evento.</span></div>
+                        <div><span>Operador</span><strong>{{ $entrada->validador?->name ?? auth()->user()->name }}</strong></div>
+                        <div><span>Fecha</span><strong>{{ $entrada->usada_en?->translatedFormat('D. d M Y, H:i:s') }}</strong></div>
+                    </div>
+                @endif
 
                 <a href="{{ route('entradas.validar', ['evento_id' => $eventoSeleccionado->id]) }}" class="validacion-otro">Escanear otro QR</a>
             @else

@@ -7,10 +7,25 @@
     <link rel="stylesheet" href="{{ asset('css/tickevent.css') }}">
 </head>
 <body>
+    @php
+        $rolActual = auth()->user()?->rol;
+        $inicioSegunRol = match ($rolActual) {
+            'administrador' => route('admin.dashboard'),
+            'organizador' => route('organizador.eventos.index'),
+            'personal_acceso' => route('entradas.validar'),
+            default => route('inicio'),
+        };
+        $rolEtiqueta = match ($rolActual) {
+            'administrador' => 'Administrador',
+            'organizador' => 'Organizador',
+            'personal_acceso' => 'Personal de acceso',
+            default => 'Cliente',
+        };
+    @endphp
 
     <header class="encabezado">
         <div class="encabezado-contenido">
-            <a class="logo" href="{{ route('inicio') }}">
+            <a class="logo" href="{{ $inicioSegunRol }}">
                 <img src="{{ asset('imagenes/logo-tickevent.png') }}" alt="TickEvent" class="logo-imagen">
             </a>
 
@@ -27,10 +42,18 @@
             </button>
 
             <nav class="navegacion" id="navegacion-principal" aria-label="Navegación principal">
-                <a href="{{ route('eventos.index') }}">Eventos</a>
-                <a href="{{ route('conciertos.index') }}">Conciertos</a>
-                <a href="{{ route('partidos.index') }}">Partidos</a>
-                <a href="{{ route('contacto') }}">Contáctanos</a>
+                @if(!$rolActual || $rolActual === 'cliente')
+                    <a href="{{ route('eventos.index') }}">Eventos</a>
+                    <a href="{{ route('conciertos.index') }}">Conciertos</a>
+                    <a href="{{ route('partidos.index') }}">Partidos</a>
+                    <a href="{{ route('contacto') }}">Contáctanos</a>
+                @elseif($rolActual === 'administrador')
+                    <a href="{{ route('admin.dashboard') }}">Volver al panel</a>
+                @elseif($rolActual === 'organizador')
+                    <a href="{{ route('organizador.eventos.index') }}">Volver a mis eventos</a>
+                @else
+                    <a href="{{ route('entradas.validar') }}">Volver a validación</a>
+                @endif
 
                 @guest
                     <a href="{{ route('login') }}">
@@ -41,32 +64,11 @@
                         Registrarse
                     </a>
                 @else
-                    <a href="{{ route('entradas.index') }}">Mis entradas</a>
-
-                    @if(auth()->user()->rol === 'organizador')
-                        <a href="{{ route('organizador.eventos.index') }}">Mis eventos</a>
+                    @if($rolActual === 'cliente')
+                        <a href="{{ route('entradas.index') }}">Mis entradas</a>
                     @endif
 
-                    @if(auth()->user()->rol === 'administrador')
-                        <a href="{{ route('admin.dashboard') }}">Administración</a>
-                    @endif
-
-                    @if(auth()->user()->rol === 'personal_acceso' && auth()->user()->eventosAsignadosAcceso()->exists())
-                        <a href="{{ route('entradas.validar') }}">Validar entrada</a>
-                    @endif
-
-                    <span class="navegacion-identidad">
-                        <strong>{{ auth()->user()->name }}</strong>
-                        <small>{{ match(auth()->user()->rol) { 'administrador' => 'Administrador', 'organizador' => 'Organizador', 'personal_acceso' => 'Personal de acceso', default => 'Cliente' } }}</small>
-                    </span>
-
-                    <form action="{{ route('logout') }}" method="POST" class="form-salir">
-                        @csrf
-
-                        <button type="submit" class="boton-salir">
-                            Cerrar sesión
-                        </button>
-                    </form>
+                    @include('partials.cuenta-menu', ['rolEtiqueta' => $rolEtiqueta])
                 @endguest
             </nav>
         </div>

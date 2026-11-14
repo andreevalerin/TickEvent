@@ -61,20 +61,6 @@
         @endif
     </section>
 
-    <section class="inicio-confianza" aria-label="Ventajas de TickEvent">
-        <article>
-            <strong>Reserva con tiempo</strong>
-            <span>Tus entradas se mantienen durante 15 minutos.</span>
-        </article>
-        <article>
-            <strong>Compra por zonas</strong>
-            <span>Consulta disponibilidad y tarifas reales.</span>
-        </article>
-        <article>
-            <strong>Acceso controlado</strong>
-            <span>Cada entrada válida se utiliza una sola vez.</span>
-        </article>
-    </section>
 </main>
 
 @endsection

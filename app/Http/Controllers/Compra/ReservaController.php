@@ -60,12 +60,10 @@ class ReservaController extends Controller
                                 ->where('expira_en', '>', now());
                         });
                 })
-                ->exists();
+                ->first();
 
             if ($otraReserva) {
-                throw ValidationException::withMessages([
-                    'reserva' => 'Ya tienes una reserva activa. Debes finalizarla o cancelarla.'
-                ]);
+                return $otraReserva;
             }
 
             $tarifa = Tarifa::with('zona')
@@ -158,7 +156,13 @@ class ReservaController extends Controller
             return $reserva;
         }, 3);
 
-        return redirect()->route('reservas.mostrar', $reserva);
+        $redireccion = redirect()->route('reservas.mostrar', $reserva);
+
+        if (!$reserva->wasRecentlyCreated) {
+            $redireccion->with('estado', 'Te llevamos a tu reserva pendiente para que puedas finalizarla o cancelarla.');
+        }
+
+        return $redireccion;
     }
 
     public function mostrar(Request $request, Reserva $reserva)

@@ -78,10 +78,9 @@ Route::post('/cerrar-sesion', [AutenticacionController::class, 'salir'])
     ->name('logout');
 
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'rol:cliente'])->group(function () {
     Route::post('/eventos/{evento}/reservar', [ReservaController::class, 'guardar'])
-    ->middleware('auth')
-    ->name('reservas.guardar');
+        ->name('reservas.guardar');
 
     Route::get('/reservas/{reserva}/pago', [ReservaController::class, 'pago'])
     ->name('reservas.pago');

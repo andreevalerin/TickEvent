@@ -82,6 +82,25 @@ class OrganizadorEventoTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_el_panel_del_organizador_filtra_y_busca_solo_sus_eventos(): void
+    {
+        $organizador = $this->crearOrganizador();
+        $primero = $this->crearEvento($organizador);
+        $primero->update(['titulo' => 'Festival Alfa']);
+        $segundo = $this->crearEvento($organizador);
+        $segundo->update(['titulo' => 'Concierto Beta']);
+
+        $this->actingAs($organizador)
+            ->get(route('organizador.eventos.index', [
+                'q' => 'Alfa',
+                'orden' => 'titulo',
+            ]))
+            ->assertOk()
+            ->assertSee('Festival Alfa')
+            ->assertDontSee('Concierto Beta')
+            ->assertSee('Más recientes');
+    }
+
     public function test_un_organizador_no_puede_publicar_sin_una_zona_y_tarifa_activas(): void
     {
         $organizador = $this->crearOrganizador();

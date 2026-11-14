@@ -141,11 +141,16 @@
         <aside class="compra-panel pago-resumen">
             <h2>Resumen de compra</h2>
 
-            <p><strong>{{ $reserva->evento->titulo }}</strong></p>
-
-            <p>
-                {{ $reserva->evento->fecha_evento->format('d/m/Y H:i') }}
-            </p>
+            <div class="pago-resumen-evento">
+                @if($reserva->evento->imagen_principal)
+                    <img src="{{ asset($reserva->evento->imagen_principal) }}" alt="{{ $reserva->evento->titulo }}">
+                @endif
+                <div>
+                    <strong>{{ $reserva->evento->titulo }}</strong>
+                    <span>{{ $reserva->evento->fecha_evento->translatedFormat('D. d M Y, H:i') }}</span>
+                    <span>{{ $reserva->evento->lugar }}, {{ $reserva->evento->ciudad }}</span>
+                </div>
+            </div>
 
             @foreach($reserva->detalles as $detalle)
                 <div class="compra-detalle">
@@ -196,6 +201,11 @@
             <a href="{{ route('reservas.mostrar', $reserva) }}" class="pago-volver">
                 Volver a mi reserva
             </a>
+
+            <div class="pago-seguro">
+                <strong>Pago seguro</strong>
+                <span>TickEvent no almacena números de tarjeta ni códigos de seguridad.</span>
+            </div>
         </aside>
     </div>
 

@@ -124,7 +124,7 @@ class AdministracionPermisosTest extends TestCase
             [$administrador, route('admin.dashboard')],
             [$organizador, route('organizador.eventos.index')],
             [$personal, route('entradas.validar')],
-            [$cliente, route('entradas.index')],
+            [$cliente, route('inicio')],
         ];
 
         foreach ($destinos as [$usuario, $destino]) {
@@ -135,6 +135,108 @@ class AdministracionPermisosTest extends TestCase
             ])->assertRedirect($destino);
             $this->post(route('logout'))->assertRedirect(route('inicio'));
         }
+    }
+
+    public function test_el_inicio_y_los_encabezados_respetan_el_rol_autenticado(): void
+    {
+        $administrador = $this->crearUsuarioConRol('administrador');
+        $organizador = $this->crearUsuarioConRol('organizador');
+        $personal = $this->crearUsuarioConRol('personal_acceso');
+        $cliente = User::factory()->create();
+        $evento = $this->crearEvento($organizador);
+        $personal->eventosAsignadosAcceso()->attach($evento->id);
+
+        $this->actingAs($administrador)
+            ->get(route('inicio'))
+            ->assertRedirect(route('admin.dashboard'));
+
+        $this->actingAs($organizador)
+            ->get(route('inicio'))
+            ->assertRedirect(route('organizador.eventos.index'));
+
+        $this->actingAs($personal)
+            ->get(route('inicio'))
+            ->assertRedirect(route('entradas.validar'));
+
+        $this->actingAs($cliente)
+            ->get(route('inicio'))
+            ->assertOk()
+            ->assertSee('cuenta-avatar', false)
+            ->assertSee('Cliente')
+            ->assertSee('Mis entradas')
+            ->assertDontSee('Mis eventos')
+            ->assertDontSee('Administración');
+
+        $this->actingAs($administrador)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('cuenta-avatar', false)
+            ->assertSee('Administrador');
+
+        $this->actingAs($organizador)
+            ->get(route('organizador.eventos.index'))
+            ->assertOk()
+            ->assertSee('cuenta-avatar', false)
+            ->assertSee('Organizador')
+            ->assertSee(route('organizador.perfil'), false);
+
+        $this->actingAs($personal)
+            ->get(route('entradas.validar'))
+            ->assertOk()
+            ->assertSee('cuenta-avatar', false)
+            ->assertSee('Personal de acceso');
+    }
+
+    public function test_solo_el_cliente_puede_abrir_y_continuar_el_proceso_de_compra(): void
+    {
+        $administrador = $this->crearUsuarioConRol('administrador');
+        $organizador = $this->crearUsuarioConRol('organizador');
+        $cliente = User::factory()->create();
+        $evento = $this->crearEvento($organizador);
+
+        $zona = Zona::create([
+            'evento_id' => $evento->id,
+            'nombre' => 'General',
+            'capacidad' => 100,
+            'activo' => true,
+        ]);
+        $tarifa = Tarifa::create([
+            'zona_id' => $zona->id,
+            'nombre' => 'Regular',
+            'precio' => 80,
+            'activo' => true,
+        ]);
+
+        foreach ([$administrador, $organizador] as $usuario) {
+            $this->actingAs($usuario)
+                ->get(route('eventos.show', $evento))
+                ->assertOk()
+                ->assertDontSee('Comprar ahora');
+
+            $this->actingAs($usuario)
+                ->get(route('eventos.comprar', $evento))
+                ->assertForbidden();
+
+            $this->actingAs($usuario)
+                ->post(route('reservas.guardar', $evento), [
+                    'tarifa_id' => $tarifa->id,
+                    'cantidad' => 1,
+                    'dni' => ['71234567'],
+                ])
+                ->assertForbidden();
+        }
+
+        $this->actingAs($cliente)
+            ->get(route('eventos.comprar', $evento))
+            ->assertOk();
+
+        $this->actingAs($cliente)
+            ->post(route('reservas.guardar', $evento), [
+                'tarifa_id' => $tarifa->id,
+                'cantidad' => 1,
+                'dni' => ['71234567'],
+            ])
+            ->assertSessionDoesntHaveErrors();
     }
 
     public function test_el_administrador_crea_y_actualiza_usuarios_sin_permitir_administradores(): void

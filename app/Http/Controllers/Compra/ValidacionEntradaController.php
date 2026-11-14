@@ -48,7 +48,7 @@ class ValidacionEntradaController extends Controller
                 ];
             }
 
-            $entrada->load('reserva.evento', 'tarifa.zona');
+            $entrada->load('reserva.evento', 'tarifa.zona', 'validador');
 
             if (!$this->puedeValidarEvento($request, $entrada->reserva->evento)
                 || $entrada->reserva->evento_id !== $eventoSeleccionado->id) {
@@ -87,7 +87,7 @@ class ValidacionEntradaController extends Controller
             return [
                 'permitido' => true,
                 'motivo' => 'La entrada es válida y puede ingresar al evento.',
-                'entrada' => $entrada->fresh(['reserva.evento', 'tarifa.zona']),
+                'entrada' => $entrada->fresh(['reserva.evento', 'tarifa.zona', 'validador']),
             ];
         }, 3);
 

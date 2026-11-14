@@ -17,9 +17,25 @@
     </section>
 
     <div class="organizador-herramientas">
-        <nav><span class="activo">Todos ({{ $eventos->count() }})</span><span>Próximos ({{ $eventos->where('estado', 'publicado')->where('fecha_evento', '>=', now())->count() }})</span><span>Pasados ({{ $eventos->where('fecha_evento', '<', now())->count() }})</span><span>Borradores ({{ $eventos->where('estado', 'borrador')->count() }})</span></nav>
-        <a href="{{ route('organizador.zonas.index') }}" class="boton-secundario">Administrar zonas</a>
+        <nav>
+            <a href="{{ route('organizador.eventos.index', ['filtro' => 'todos']) }}" @class(['activo' => $filtro === 'todos'])>Todos ({{ $conteos['todos'] }})</a>
+            <a href="{{ route('organizador.eventos.index', ['filtro' => 'proximos']) }}" @class(['activo' => $filtro === 'proximos'])>Próximos ({{ $conteos['proximos'] }})</a>
+            <a href="{{ route('organizador.eventos.index', ['filtro' => 'pasados']) }}" @class(['activo' => $filtro === 'pasados'])>Pasados ({{ $conteos['pasados'] }})</a>
+            <a href="{{ route('organizador.eventos.index', ['filtro' => 'borradores']) }}" @class(['activo' => $filtro === 'borradores'])>Borradores ({{ $conteos['borradores'] }})</a>
+        </nav>
+        <form method="GET" action="{{ route('organizador.eventos.index') }}" class="organizador-busqueda">
+            <input type="hidden" name="filtro" value="{{ $filtro }}">
+            <input type="search" name="q" value="{{ $busqueda }}" placeholder="Buscar evento..." aria-label="Buscar evento">
+            <select name="orden" aria-label="Ordenar eventos" onchange="this.form.submit()">
+                <option value="recientes" @selected($orden === 'recientes')>Más recientes</option>
+                <option value="antiguos" @selected($orden === 'antiguos')>Más antiguos</option>
+                <option value="titulo" @selected($orden === 'titulo')>Por título</option>
+            </select>
+            <button type="submit">Buscar</button>
+        </form>
     </div>
+
+    <div class="organizador-zonas-enlace"><a href="{{ route('organizador.zonas.index') }}">Administrar zonas y tarifas</a></div>
 
     @if($eventos->isEmpty())
         <section class="admin-panel admin-vacio"><div><h2>Aún no registraste eventos</h2><p>Crea tu primer evento y configura sus zonas y tarifas.</p></div></section>
@@ -40,6 +56,13 @@
                 </article>
             @endforeach
         </section>
+        @if($eventos->hasPages())
+            <nav class="organizador-paginacion" aria-label="Paginación de eventos">
+                @if($eventos->onFirstPage())<span aria-disabled="true">‹</span>@else<a href="{{ $eventos->previousPageUrl() }}">‹</a>@endif
+                <strong>{{ $eventos->currentPage() }}</strong>
+                @if($eventos->hasMorePages())<a href="{{ $eventos->nextPageUrl() }}">›</a>@else<span aria-disabled="true">›</span>@endif
+            </nav>
+        @endif
     @endif
 </div>
 @endsection

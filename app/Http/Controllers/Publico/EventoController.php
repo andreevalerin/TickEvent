@@ -64,16 +64,17 @@ class EventoController extends Controller
 
     public function comprar(Evento $evento)
     {
-    abort_unless($evento->estado === 'publicado', 404);
+        abort_if(request()->user() && request()->user()->rol !== 'cliente', 403);
+        abort_unless($evento->estado === 'publicado', 404);
 
-    $evento->load([
-        'zonas' => fn ($consulta) => $consulta
-            ->where('activo', true)
-            ->whereHas('tarifas', fn ($tarifas) => $tarifas->where('activo', true)),
-        'zonas.tarifas' => fn ($consulta) => $consulta->where('activo', true),
-    ]);
+        $evento->load([
+            'zonas' => fn ($consulta) => $consulta
+                ->where('activo', true)
+                ->whereHas('tarifas', fn ($tarifas) => $tarifas->where('activo', true)),
+            'zonas.tarifas' => fn ($consulta) => $consulta->where('activo', true),
+        ]);
 
-    return view('publico.eventos.comprar', compact('evento'));
+        return view('publico.eventos.comprar', compact('evento'));
     }
 
     public function show(Evento $evento)

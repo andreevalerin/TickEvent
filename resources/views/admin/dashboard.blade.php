@@ -29,13 +29,10 @@
 <section class="admin-graficos">
     <article class="admin-panel admin-grafico-ventas">
         <div class="admin-panel-cabecera"><div><h2>Ventas de entradas</h2><p>Entradas asociadas a pagos aprobados, por fecha.</p></div></div>
-        @if($ventas->isEmpty())
-            <div class="admin-vacio">Todavía no existen ventas aprobadas para graficar.</div>
-        @else
             <svg class="admin-linea" viewBox="0 0 500 220" role="img" aria-label="Ventas de entradas por fecha">
                 <path d="M30 50H470M30 93H470M30 136H470M30 180H470" class="admin-rejilla"/>
-                <polyline points="{{ $puntos }}" class="admin-linea-area"/>
-                <polyline points="{{ $puntos }}" class="admin-linea-trazo"/>
+                <polyline points="{{ $ventas->isEmpty() ? '30,180 470,180' : $puntos }}" class="admin-linea-area"/>
+                <polyline points="{{ $ventas->isEmpty() ? '30,180 470,180' : $puntos }}" class="admin-linea-trazo"/>
                 @foreach($ventas as $indice => $venta)
                     @php
                         $x = $ventas->count() > 1 ? 30 + ($indice * (440 / ($ventas->count() - 1))) : 250;
@@ -43,8 +40,10 @@
                     @endphp
                     <circle cx="{{ $x }}" cy="{{ $y }}" r="4"/><text x="{{ $x }}" y="205" text-anchor="middle">{{ \Carbon\Carbon::parse($venta->fecha)->format('d/m') }}</text>
                 @endforeach
+                @if($ventas->isEmpty())
+                    <text x="250" y="110" text-anchor="middle">0 ventas aprobadas</text>
+                @endif
             </svg>
-        @endif
     </article>
     <article class="admin-panel admin-grafico-categorias">
         <div class="admin-panel-cabecera"><div><h2>Entradas por categoría</h2><p>Distribución de entradas vendidas.</p></div></div>

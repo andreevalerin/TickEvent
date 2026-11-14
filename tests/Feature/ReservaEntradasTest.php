@@ -122,6 +122,38 @@ class ReservaEntradasTest extends TestCase
         $this->assertDatabaseCount('reservas', 2);
     }
 
+    public function test_una_reserva_activa_redirige_al_usuario_a_su_resumen(): void
+    {
+        Carbon::setTestNow('2026-11-12 12:00:00');
+
+        [$evento, $zona, $tarifa] = $this->crearEvento(5000, 20);
+        $cliente = User::factory()->create();
+
+        $this->actingAs($cliente)->post(
+            route('reservas.guardar', $evento),
+            [
+                'tarifa_id' => $tarifa->id,
+                'cantidad' => 1,
+                'dni' => ['71234567'],
+            ]
+        )->assertSessionDoesntHaveErrors();
+
+        $reserva = Reserva::query()->sole();
+
+        $this->actingAs($cliente)->post(
+            route('reservas.guardar', $evento),
+            [
+                'tarifa_id' => $tarifa->id,
+                'cantidad' => 1,
+                'dni' => ['72345678'],
+            ]
+        )
+            ->assertRedirect(route('reservas.mostrar', $reserva))
+            ->assertSessionHas('estado');
+
+        $this->assertDatabaseCount('reservas', 1);
+    }
+
     public function test_el_limite_de_seis_incluye_las_compras_confirmadas(): void
     {
         Carbon::setTestNow('2026-11-12 12:00:00');

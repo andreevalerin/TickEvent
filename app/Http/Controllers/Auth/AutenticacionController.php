@@ -53,11 +53,7 @@ class AutenticacionController extends Controller
 
             $destino = $this->destinoSegunRol($request->user());
 
-            if ($request->user()->rol === 'personal_acceso') {
-                return redirect()->to($destino);
-            }
-
-            return redirect()->intended($destino);
+            return redirect()->to($destino);
         }
 
         return back()
@@ -83,7 +79,7 @@ class AutenticacionController extends Controller
             'administrador' => route('admin.dashboard'),
             'organizador' => route('organizador.eventos.index'),
             'personal_acceso' => route('entradas.validar'),
-            default => route('entradas.index'),
+            default => route('inicio'),
         };
     }
 }

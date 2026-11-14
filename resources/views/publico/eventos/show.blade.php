@@ -67,18 +67,32 @@
     </div>
 
     <section id="tarifario" role="tabpanel">
-        <div class="tarifario-visual">
-            @if($evento->imagen_plano)
-                <img
-                    src="{{ asset($evento->imagen_plano) }}"
-                    alt="Plano de zonas y tarifario de {{ $evento->titulo }}"
-                    class="imagen-tarifario"
-                >
-            @else
-                <div class="tarifario-pendiente">
-                    Plano y tarifario pendientes de publicación.
-                </div>
-            @endif
+        @php
+            $zonasActivas = $evento->zonas->where('activo', true);
+            $tarifasActivas = $zonasActivas->flatMap(fn ($zona) => $zona->tarifas->where('activo', true));
+        @endphp
+        <div class="tarifario-dinamico">
+            <div class="tarifario-plano">
+                @if($evento->imagen_plano)
+                    <img src="{{ asset($evento->imagen_plano) }}" alt="Plano de zonas de {{ $evento->titulo }}" @class(['compuesto' => str_contains($evento->imagen_plano, 'robbie-williams/tarifario.png')])>
+                @else
+                    <div class="tarifario-pendiente">Plano de zonas pendiente de publicación.</div>
+                @endif
+            </div>
+            <div class="tarifario-lista">
+                <div class="tarifario-lista-cabecera"><strong>Sector</strong><strong>Tarifa y precio</strong></div>
+                @forelse($zonasActivas as $zona)
+                    @foreach($zona->tarifas->where('activo', true) as $tarifa)
+                        <div class="tarifario-fila">
+                            <span class="tarifario-marca" aria-hidden="true"></span>
+                            <span><strong>{{ $zona->nombre }}</strong><small>{{ $tarifa->nombre }}</small></span>
+                            <strong>S/ {{ number_format($tarifa->precio, 2) }}</strong>
+                        </div>
+                    @endforeach
+                @empty
+                    <div class="tarifario-pendiente">No hay zonas con tarifas activas.</div>
+                @endforelse
+            </div>
         </div>
     </section>
 
@@ -143,15 +157,17 @@
     <div class="barra-cta-evento">
         <div class="barra-cta-info">
             <strong>VENTA GENERAL</strong>
+            <span class="barra-disponibilidad {{ $tarifasActivas->isNotEmpty() ? 'disponible' : '' }}">{{ $tarifasActivas->isNotEmpty() ? 'Disponible' : 'No disponible' }}</span>
             <span>Entradas por zonas · Sin asientos numerados</span>
         </div>
 
-        <a
-            href="{{ route('eventos.comprar', $evento) }}"
-            class="boton-comprar-link"
-        >
-            Comprar ahora →
-        </a>
+        @if(!auth()->check() || auth()->user()->rol === 'cliente')
+            <a href="{{ route('eventos.comprar', $evento) }}" class="boton-comprar-link">Comprar ahora →</a>
+        @elseif(auth()->user()->rol === 'organizador')
+            <a href="{{ route('organizador.eventos.index') }}" class="boton-comprar-link">Volver a mis eventos</a>
+        @elseif(auth()->user()->rol === 'administrador')
+            <a href="{{ route('admin.eventos.index') }}" class="boton-comprar-link">Volver a eventos</a>
+        @endif
     </div>
 
 </main>
