@@ -17,6 +17,14 @@
             </span>
         </header>
 
+        @if($entrada->reserva->evento->imagen_principal)
+            <img
+                src="{{ asset($entrada->reserva->evento->imagen_principal) }}"
+                alt="{{ $entrada->reserva->evento->titulo }}"
+                class="entrada-digital-imagen"
+            >
+        @endif
+
         <div class="entrada-digital-contenido">
             <span class="etiqueta">ENTRADA NOMINATIVA</span>
             <h1>{{ $entrada->reserva->evento->titulo }}</h1>

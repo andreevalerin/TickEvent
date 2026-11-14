@@ -1,4 +1,4 @@
-@extends('layouts.principal')
+@extends('layouts.organizador')
 
 @section('titulo', ($evento->exists ? 'Editar' : 'Crear') . ' evento - TickEvent')
 
@@ -21,7 +21,8 @@
     }
 @endphp
 
-<main class="compra-contenedor">
+<div class="panel-rol-contenido">
+
     <a href="{{ route('organizador.eventos.index') }}" class="volver-evento">
         ← Volver a mis eventos
     </a>
@@ -191,7 +192,7 @@
             {{ $evento->exists ? 'Guardar cambios' : 'Crear evento' }}
         </button>
     </form>
-</main>
+</div>
 
 <script>
     const listaZonas = document.getElementById('lista-zonas');

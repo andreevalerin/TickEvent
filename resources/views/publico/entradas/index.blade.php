@@ -23,6 +23,14 @@
         <div class="entradas-lista">
             @foreach($entradas as $entrada)
                 <article class="entrada-resumen">
+                    @if($entrada->reserva->evento->imagen_principal)
+                        <img
+                            src="{{ asset($entrada->reserva->evento->imagen_principal) }}"
+                            alt="{{ $entrada->reserva->evento->titulo }}"
+                            class="entrada-resumen-imagen"
+                        >
+                    @endif
+
                     <div>
                         <span class="entrada-estado {{ $entrada->estado }}">
                             {{ strtoupper($entrada->estado) }}

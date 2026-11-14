@@ -82,6 +82,38 @@ class OrganizadorEventoTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_un_organizador_no_puede_publicar_sin_una_zona_y_tarifa_activas(): void
+    {
+        $organizador = $this->crearOrganizador();
+
+        $this->actingAs($organizador)
+            ->post(route('organizador.eventos.store'), [
+                'titulo' => 'Evento sin venta activa',
+                'categoria' => 'concierto',
+                'fecha_evento' => now()->addMonth()->format('Y-m-d H:i:s'),
+                'lugar' => 'Arena Lima',
+                'ciudad' => 'Lima',
+                'estado' => 'publicado',
+                'zonas' => [
+                    [
+                        'nombre' => 'General',
+                        'capacidad' => 100,
+                        'tarifas' => [
+                            [
+                                'nombre' => 'Regular',
+                                'precio' => 80,
+                            ],
+                        ],
+                    ],
+                ],
+            ])
+            ->assertSessionHasErrors('zonas');
+
+        $this->assertDatabaseMissing('eventos', [
+            'titulo' => 'Evento sin venta activa',
+        ]);
+    }
+
     public function test_un_organizador_no_puede_editar_eventos_ajenos(): void
     {
         $propietario = $this->crearOrganizador();
@@ -192,6 +224,48 @@ class OrganizadorEventoTest extends TestCase
             'id' => $tarifa->id,
             'activo' => false,
         ]);
+    }
+
+    public function test_un_organizador_no_puede_republicar_un_evento_retirado(): void
+    {
+        $organizador = $this->crearOrganizador();
+        $evento = $this->crearEvento($organizador);
+        $evento->update(['estado' => 'retirado']);
+
+        $this->actingAs($organizador)
+            ->get(route('organizador.eventos.edit', $evento))
+            ->assertForbidden();
+
+        $this->actingAs($organizador)
+            ->put(route('organizador.eventos.update', $evento), [
+                'titulo' => 'Intento de republicación',
+                'categoria' => 'concierto',
+                'fecha_evento' => now()->addMonth()->format('Y-m-d H:i:s'),
+                'lugar' => 'Estadio de prueba',
+                'ciudad' => 'Lima',
+                'estado' => 'publicado',
+                'zonas' => [],
+            ])
+            ->assertForbidden();
+
+        $this->assertSame('retirado', $evento->fresh()->estado);
+    }
+
+    public function test_ventas_y_perfil_solo_son_accesibles_para_el_organizador(): void
+    {
+        $organizador = $this->crearOrganizador();
+        $cliente = User::factory()->create();
+
+        foreach (['organizador.ventas', 'organizador.perfil'] as $ruta) {
+            $this->actingAs($organizador)
+                ->get(route($ruta))
+                ->assertOk()
+                ->assertSee('Organizador');
+
+            $this->actingAs($cliente)
+                ->get(route($ruta))
+                ->assertForbidden();
+        }
     }
 
     private function crearOrganizador(): User

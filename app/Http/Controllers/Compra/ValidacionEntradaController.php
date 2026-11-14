@@ -14,7 +14,10 @@ class ValidacionEntradaController extends Controller
     {
         abort_unless($this->puedeAbrirControl($request), 403);
 
-        return view('publico.entradas.validar');
+        $eventosAsignados = $this->eventosAsignados($request);
+        $eventoSeleccionado = $this->eventoSeleccionado($request, $eventosAsignados);
+
+        return view('publico.entradas.validar', compact('eventosAsignados', 'eventoSeleccionado'));
     }
 
     public function validar(Request $request)
@@ -23,10 +26,14 @@ class ValidacionEntradaController extends Controller
 
         $datos = $request->validate([
             'codigo' => ['required', 'string', 'max:80'],
+            'evento_id' => ['required', 'integer'],
         ]);
+        $eventosAsignados = $this->eventosAsignados($request);
+        abort_if($eventosAsignados->isEmpty(), 403);
+        $eventoSeleccionado = $this->eventoSeleccionado($request, $eventosAsignados);
         $codigo = strtoupper(trim($datos['codigo']));
 
-        $resultado = DB::transaction(function () use ($request, $codigo) {
+        $resultado = DB::transaction(function () use ($request, $codigo, $eventoSeleccionado) {
             $entrada = Entrada::where('codigo', $codigo)
                 ->lockForUpdate()
                 ->first();
@@ -43,7 +50,8 @@ class ValidacionEntradaController extends Controller
 
             $entrada->load('reserva.evento', 'tarifa.zona');
 
-            if (!$this->puedeValidarEvento($request, $entrada->reserva->evento)) {
+            if (!$this->puedeValidarEvento($request, $entrada->reserva->evento)
+                || $entrada->reserva->evento_id !== $eventoSeleccionado->id) {
                 $this->registrarIntento($request, $entrada, $codigo, 'rechazada', 'Evento no autorizado');
 
                 return ['sin_permiso' => true];
@@ -87,6 +95,9 @@ class ValidacionEntradaController extends Controller
             abort(403);
         }
 
+        $resultado['eventosAsignados'] = $eventosAsignados;
+        $resultado['eventoSeleccionado'] = $eventoSeleccionado;
+
         return view('publico.entradas.validar', $resultado);
     }
 
@@ -94,22 +105,12 @@ class ValidacionEntradaController extends Controller
     {
         $usuario = $request->user();
 
-        return $usuario->rol === 'administrador'
-            || ($usuario->rol === 'organizador' && $usuario->eventosOrganizados()->exists())
-            || ($usuario->rol === 'personal_acceso' && $usuario->eventosAsignadosAcceso()->exists());
+        return $usuario->rol === 'personal_acceso';
     }
 
     private function puedeValidarEvento(Request $request, $evento): bool
     {
         $usuario = $request->user();
-
-        if ($usuario->rol === 'administrador') {
-            return true;
-        }
-
-        if ($usuario->rol === 'organizador') {
-            return (int) $evento->organizador_id === (int) $usuario->id;
-        }
 
         return $usuario->rol === 'personal_acceso'
             && $usuario->eventosAsignadosAcceso()->whereKey($evento->id)->exists();
@@ -130,5 +131,25 @@ class ValidacionEntradaController extends Controller
             'motivo' => $motivo,
             'ip' => $request->ip(),
         ]);
+    }
+
+    private function eventosAsignados(Request $request)
+    {
+        return $request->user()->eventosAsignadosAcceso()
+            ->where('estado', 'publicado')
+            ->orderBy('fecha_evento')
+            ->get();
+    }
+
+    private function eventoSeleccionado(Request $request, $eventosAsignados)
+    {
+        if (!$request->filled('evento_id')) {
+            return $eventosAsignados->first();
+        }
+
+        $evento = $eventosAsignados->firstWhere('id', (int) $request->input('evento_id'));
+        abort_unless($evento, 403);
+
+        return $evento;
     }
 }

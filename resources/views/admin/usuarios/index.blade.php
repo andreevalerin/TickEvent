@@ -1,18 +1,20 @@
-@extends('layouts.principal')
+@extends('layouts.admin')
 
 @section('titulo', 'Usuarios - Administración TickEvent')
 
 @section('contenido')
 
-<main class="compra-contenedor admin-contenedor">
-    <div class="organizador-cabecera">
+<div class="admin-contenido-seccion">
+    <div class="admin-titulo">
         <div>
-            <span class="etiqueta">PANEL ADMINISTRATIVO</span>
+            <span class="admin-etiqueta">PANEL ADMINISTRATIVO</span>
             <h1>Usuarios y permisos</h1>
             <p>Asigna organizadores y personal de acceso desde una cuenta administradora.</p>
         </div>
 
-        <a href="{{ route('admin.dashboard') }}" class="boton-secundario">Volver al resumen</a>
+        <div class="organizador-acciones">
+            <a href="{{ route('admin.usuarios.create') }}" class="admin-boton">Crear usuario</a>
+        </div>
     </div>
 
     @if(session('estado'))
@@ -27,7 +29,7 @@
         </div>
     @endif
 
-    <section class="compra-panel admin-seccion">
+    <section class="admin-panel admin-seccion">
         <div class="admin-tabla-contenedor">
             <table class="admin-tabla">
                 <thead>
@@ -36,6 +38,7 @@
                         <th>Correo</th>
                         <th>Alta</th>
                         <th>Rol y asignaciones</th>
+                        <th>Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -86,12 +89,21 @@
                                     @endif
                                 @endif
                             </td>
+                            <td>
+                                @if($usuario->rol === 'administrador')
+                                    <span>Protegido</span>
+                                @else
+                                    <a href="{{ route('admin.usuarios.edit', $usuario) }}" class="boton-secundario">
+                                        Editar
+                                    </a>
+                                @endif
+                            </td>
                         </tr>
                     @endforeach
                 </tbody>
             </table>
         </div>
     </section>
-</main>
+</div>
 
 @endsection

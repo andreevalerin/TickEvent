@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Organizador;
 
 use App\Http\Controllers\Controller;
 use App\Models\Evento;
+use App\Models\Entrada;
+use App\Models\Pago;
 use App\Models\Tarifa;
 use App\Models\Zona;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class EventoController extends Controller
 {
@@ -19,7 +22,36 @@ class EventoController extends Controller
             ->orderByDesc('fecha_evento')
             ->get();
 
-        return view('organizador.eventos.index', compact('eventos'));
+        $eventoIds = $eventos->pluck('id');
+        $entradasPorEvento = Entrada::query()
+            ->join('reservas', 'reservas.id', '=', 'entradas.reserva_id')
+            ->join('pagos', 'pagos.reserva_id', '=', 'reservas.id')
+            ->where('pagos.estado', 'aprobado')
+            ->whereIn('reservas.evento_id', $eventoIds)
+            ->select('reservas.evento_id', DB::raw('COUNT(entradas.id) as total'))
+            ->groupBy('reservas.evento_id')
+            ->pluck('total', 'evento_id');
+        $ingresosPorEvento = Pago::query()
+            ->join('reservas', 'reservas.id', '=', 'pagos.reserva_id')
+            ->where('pagos.estado', 'aprobado')
+            ->whereIn('reservas.evento_id', $eventoIds)
+            ->select('reservas.evento_id', DB::raw('SUM(pagos.monto_centimos) as total'))
+            ->groupBy('reservas.evento_id')
+            ->pluck('total', 'evento_id');
+
+        $eventos->each(function ($evento) use ($entradasPorEvento, $ingresosPorEvento) {
+            $evento->entradas_vendidas = (int) ($entradasPorEvento[$evento->id] ?? 0);
+            $evento->ingresos_centimos = (int) ($ingresosPorEvento[$evento->id] ?? 0);
+        });
+
+        $metricas = [
+            'eventos' => $eventos->count(),
+            'proximos' => $eventos->where('estado', 'publicado')->where('fecha_evento', '>=', now())->count(),
+            'entradas' => $eventos->sum('entradas_vendidas'),
+            'ingresos_centimos' => $eventos->sum('ingresos_centimos'),
+        ];
+
+        return view('organizador.eventos.index', compact('eventos', 'metricas'));
     }
 
     public function create()
@@ -65,6 +97,7 @@ class EventoController extends Controller
     public function edit(Request $request, Evento $evento)
     {
         $this->autorizarPropietario($request, $evento);
+        abort_if($evento->estado === 'retirado', 403);
         $evento->load(['zonas' => function ($consulta) {
             $consulta->with('tarifas')->orderBy('id');
         }]);
@@ -91,6 +124,7 @@ class EventoController extends Controller
     public function update(Request $request, Evento $evento)
     {
         $this->autorizarPropietario($request, $evento);
+        abort_if($evento->estado === 'retirado', 403);
         $datos = $this->validarDatos($request);
         $imagenes = $this->guardarImagenes($request);
 
@@ -142,7 +176,7 @@ class EventoController extends Controller
 
     private function validarDatos(Request $request): array
     {
-        return $request->validate([
+        $datos = $request->validate([
             'titulo' => ['required', 'string', 'max:150'],
             'categoria' => ['required', 'in:concierto,partido'],
             'descripcion' => ['nullable', 'string', 'max:3000'],
@@ -164,6 +198,46 @@ class EventoController extends Controller
             'zonas.*.tarifas.*.precio' => ['required', 'numeric', 'min:0.01', 'max:99999999.99'],
             'zonas.*.tarifas.*.activo' => ['nullable', 'boolean'],
         ]);
+
+        foreach ($datos['zonas'] as $indice => $zona) {
+            $nombres = collect($zona['tarifas'])
+                ->pluck('nombre')
+                ->map(fn ($nombre) => mb_strtolower(trim($nombre)));
+
+            if ($nombres->duplicates()->isNotEmpty()) {
+                throw ValidationException::withMessages([
+                    "zonas.$indice.tarifas" => 'No repitas el nombre de una tarifa dentro de la misma zona.',
+                ]);
+            }
+
+            if ($datos['estado'] === 'publicado' && (bool) ($zona['activo'] ?? false)) {
+                $tieneTarifaActiva = collect($zona['tarifas'])
+                    ->contains(fn ($tarifa) => (bool) ($tarifa['activo'] ?? false));
+
+                if (!$tieneTarifaActiva) {
+                    throw ValidationException::withMessages([
+                        "zonas.$indice.tarifas" => 'Cada zona activa debe tener al menos una tarifa activa para publicar el evento.',
+                    ]);
+                }
+            }
+        }
+
+        if ($datos['estado'] === 'publicado') {
+            $tieneZonaVendible = collect($datos['zonas'])->contains(
+                fn ($zona) => (bool) ($zona['activo'] ?? false)
+                    && collect($zona['tarifas'])->contains(
+                        fn ($tarifa) => (bool) ($tarifa['activo'] ?? false)
+                    )
+            );
+
+            if (!$tieneZonaVendible) {
+                throw ValidationException::withMessages([
+                    'zonas' => 'El evento debe tener al menos una zona activa con una tarifa activa para publicarse.',
+                ]);
+            }
+        }
+
+        return $datos;
     }
 
     private function guardarImagenes(Request $request): array

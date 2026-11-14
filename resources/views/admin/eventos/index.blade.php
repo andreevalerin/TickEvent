@@ -1,25 +1,24 @@
-@extends('layouts.principal')
+@extends('layouts.admin')
 
 @section('titulo', 'Eventos - Administración TickEvent')
 
 @section('contenido')
 
-<main class="compra-contenedor admin-contenedor">
-    <div class="organizador-cabecera">
+<div class="admin-contenido-seccion">
+    <div class="admin-titulo">
         <div>
-            <span class="etiqueta">PANEL ADMINISTRATIVO</span>
+            <span class="admin-etiqueta">PANEL ADMINISTRATIVO</span>
             <h1>Eventos</h1>
             <p>Revisa el catálogo y controla su disponibilidad pública sin eliminar información.</p>
         </div>
 
-        <a href="{{ route('admin.dashboard') }}" class="boton-secundario">Volver al resumen</a>
     </div>
 
     @if(session('estado'))
         <div class="compra-exito">{{ session('estado') }}</div>
     @endif
 
-    <section class="compra-panel admin-seccion">
+    <section class="admin-panel admin-seccion">
         <div class="admin-tabla-contenedor">
             <table class="admin-tabla">
                 <thead>
@@ -34,7 +33,7 @@
                 <tbody>
                     @foreach($eventos as $evento)
                         <tr>
-                            <td><strong>{{ $evento->titulo }}</strong><small>{{ $evento->lugar }}, {{ $evento->ciudad }}</small></td>
+                            <td><div class="admin-evento-tabla"><span>@if($evento->imagen_principal)<img src="{{ asset($evento->imagen_principal) }}" alt="">@endif</span><div><strong>{{ $evento->titulo }}</strong><small>{{ $evento->lugar }}, {{ $evento->ciudad }}</small></div></div></td>
                             <td>{{ $evento->organizador->name }}</td>
                             <td>{{ $evento->fecha_evento->format('d/m/Y H:i') }}</td>
                             <td>{{ number_format($evento->aforo_total) }}</td>
@@ -58,6 +57,6 @@
             </table>
         </div>
     </section>
-</main>
+</div>
 
 @endsection

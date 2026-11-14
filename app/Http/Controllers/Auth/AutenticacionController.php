@@ -51,7 +51,13 @@ class AutenticacionController extends Controller
         if (Auth::attempt($datos)) {
             $request->session()->regenerate();
 
-            return redirect()->intended(route('inicio'));
+            $destino = $this->destinoSegunRol($request->user());
+
+            if ($request->user()->rol === 'personal_acceso') {
+                return redirect()->to($destino);
+            }
+
+            return redirect()->intended($destino);
         }
 
         return back()
@@ -69,5 +75,15 @@ class AutenticacionController extends Controller
         $request->session()->regenerateToken();
 
         return redirect()->route('inicio');
+    }
+
+    private function destinoSegunRol(User $usuario): string
+    {
+        return match ($usuario->rol) {
+            'administrador' => route('admin.dashboard'),
+            'organizador' => route('organizador.eventos.index'),
+            'personal_acceso' => route('entradas.validar'),
+            default => route('entradas.index'),
+        };
     }
 }

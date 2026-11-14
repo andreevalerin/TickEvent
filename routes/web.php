@@ -12,9 +12,13 @@ use App\Http\Controllers\Compra\PagoController;
 use App\Http\Controllers\Compra\EntradaController;
 use App\Http\Controllers\Compra\ValidacionEntradaController;
 use App\Http\Controllers\Organizador\EventoController as EventoOrganizadorController;
+use App\Http\Controllers\Organizador\ZonaController as ZonaOrganizadorController;
+use App\Http\Controllers\Organizador\PanelController as PanelOrganizadorController;
 use App\Http\Controllers\Admin\DashboardController as AdminDashboardController;
 use App\Http\Controllers\Admin\UsuarioController as AdminUsuarioController;
 use App\Http\Controllers\Admin\EventoController as AdminEventoController;
+use App\Http\Controllers\Admin\EntradaController as AdminEntradaController;
+use App\Http\Controllers\Admin\VentaController as AdminVentaController;
 
 
 Route::get('/', [HomeController::class, 'index'])
@@ -98,6 +102,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/mis-entradas/{entrada}', [EntradaController::class, 'show'])
         ->name('entradas.show');
 
+});
+
+Route::middleware(['auth', 'rol:personal_acceso'])->group(function () {
     Route::get('/validar-entradas', [ValidacionEntradaController::class, 'mostrar'])
         ->name('entradas.validar');
 
@@ -119,6 +126,22 @@ Route::middleware(['auth', 'rol:organizador'])->prefix('organizador')->name('org
         ->name('eventos.update');
     Route::delete('/eventos/{evento}', [EventoOrganizadorController::class, 'destroy'])
         ->name('eventos.destroy');
+    Route::get('/zonas', [ZonaOrganizadorController::class, 'index'])
+        ->name('zonas.index');
+    Route::get('/zonas/crear', [ZonaOrganizadorController::class, 'create'])
+        ->name('zonas.create');
+    Route::post('/zonas', [ZonaOrganizadorController::class, 'store'])
+        ->name('zonas.store');
+    Route::get('/zonas/{zona}/editar', [ZonaOrganizadorController::class, 'edit'])
+        ->name('zonas.edit');
+    Route::put('/zonas/{zona}', [ZonaOrganizadorController::class, 'update'])
+        ->name('zonas.update');
+    Route::delete('/zonas/{zona}', [ZonaOrganizadorController::class, 'destroy'])
+        ->name('zonas.destroy');
+    Route::get('/ventas', [PanelOrganizadorController::class, 'ventas'])
+        ->name('ventas');
+    Route::get('/perfil', [PanelOrganizadorController::class, 'perfil'])
+        ->name('perfil');
 });
 
 Route::middleware(['auth', 'rol:administrador'])->prefix('admin')->name('admin.')->group(function () {
@@ -126,6 +149,14 @@ Route::middleware(['auth', 'rol:administrador'])->prefix('admin')->name('admin.'
         ->name('dashboard');
     Route::get('/usuarios', [AdminUsuarioController::class, 'index'])
         ->name('usuarios.index');
+    Route::get('/usuarios/crear', [AdminUsuarioController::class, 'create'])
+        ->name('usuarios.create');
+    Route::post('/usuarios', [AdminUsuarioController::class, 'store'])
+        ->name('usuarios.store');
+    Route::get('/usuarios/{usuario}/editar', [AdminUsuarioController::class, 'edit'])
+        ->name('usuarios.edit');
+    Route::put('/usuarios/{usuario}', [AdminUsuarioController::class, 'update'])
+        ->name('usuarios.update');
     Route::patch('/usuarios/{usuario}/rol', [AdminUsuarioController::class, 'actualizarRol'])
         ->name('usuarios.rol');
     Route::put('/usuarios/{usuario}/eventos-acceso', [AdminUsuarioController::class, 'actualizarEventosAcceso'])
@@ -134,4 +165,8 @@ Route::middleware(['auth', 'rol:administrador'])->prefix('admin')->name('admin.'
         ->name('eventos.index');
     Route::patch('/eventos/{evento}/estado', [AdminEventoController::class, 'actualizarEstado'])
         ->name('eventos.estado');
+    Route::get('/entradas', [AdminEntradaController::class, 'index'])
+        ->name('entradas.index');
+    Route::get('/ventas', [AdminVentaController::class, 'index'])
+        ->name('ventas.index');
 });

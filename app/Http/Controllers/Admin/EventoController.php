@@ -8,6 +8,7 @@ use App\Models\Tarifa;
 use App\Models\Zona;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class EventoController extends Controller
 {
@@ -30,6 +31,29 @@ class EventoController extends Controller
             $eventoBloqueado = Evento::whereKey($evento->id)
                 ->lockForUpdate()
                 ->firstOrFail();
+
+            if ($eventoBloqueado->estado === 'retirado' && $datos['estado'] !== 'retirado') {
+                throw ValidationException::withMessages([
+                    'estado' => 'Un evento retirado por administración no puede reactivarse.',
+                ]);
+            }
+
+            if ($datos['estado'] === 'publicado') {
+                $zonasActivas = $eventoBloqueado->zonas()->where('activo', true);
+                $tieneZonaVendible = (clone $zonasActivas)
+                    ->whereHas('tarifas', fn ($consulta) => $consulta->where('activo', true))
+                    ->exists();
+                $tieneZonaSinTarifa = (clone $zonasActivas)
+                    ->whereDoesntHave('tarifas', fn ($consulta) => $consulta->where('activo', true))
+                    ->exists();
+
+                if (!$tieneZonaVendible || $tieneZonaSinTarifa) {
+                    throw ValidationException::withMessages([
+                        'estado' => 'Para publicar, cada zona activa debe tener al menos una tarifa activa.',
+                    ]);
+                }
+            }
+
             $eventoBloqueado->update(['estado' => $datos['estado']]);
 
             if ($datos['estado'] === 'retirado') {

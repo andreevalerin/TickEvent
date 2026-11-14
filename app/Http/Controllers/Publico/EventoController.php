@@ -4,24 +4,40 @@ namespace App\Http\Controllers\Publico;
 
 use App\Http\Controllers\Controller;
 use App\Models\Evento;
+use Illuminate\Http\Request;
 
 class EventoController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $eventos = Evento::where('estado', 'publicado')
-            ->orderBy('fecha_evento')
-            ->get();
+        $consulta = Evento::with('zonas.tarifas')
+            ->where('estado', 'publicado');
+
+        if ($request->filled('q')) {
+            $busqueda = trim($request->string('q')->toString());
+            $consulta->where(function ($filtro) use ($busqueda) {
+                $filtro->where('titulo', 'like', '%'.$busqueda.'%')
+                    ->orWhere('lugar', 'like', '%'.$busqueda.'%')
+                    ->orWhere('ciudad', 'like', '%'.$busqueda.'%');
+            });
+        }
+
+        if (in_array($request->input('categoria'), ['concierto', 'partido'], true)) {
+            $consulta->where('categoria', $request->input('categoria'));
+        }
+
+        $eventos = $consulta->orderBy('fecha_evento')->get();
 
         return view('publico.eventos.index', [
             'eventos' => $eventos,
-            'titulo' => 'Todos los eventos'
+            'titulo' => $request->filled('q') ? 'Resultados de búsqueda' : 'Todos los eventos'
         ]);
     }
 
     public function conciertos()
     {
-        $eventos = Evento::where('estado', 'publicado')
+        $eventos = Evento::with('zonas.tarifas')
+            ->where('estado', 'publicado')
             ->where('categoria', 'concierto')
             ->orderBy('fecha_evento')
             ->get();
@@ -34,7 +50,8 @@ class EventoController extends Controller
 
     public function partidos()
     {
-        $eventos = Evento::where('estado', 'publicado')
+        $eventos = Evento::with('zonas.tarifas')
+            ->where('estado', 'publicado')
             ->where('categoria', 'partido')
             ->orderBy('fecha_evento')
             ->get();
@@ -49,7 +66,12 @@ class EventoController extends Controller
     {
     abort_unless($evento->estado === 'publicado', 404);
 
-    $evento->load('zonas.tarifas');
+    $evento->load([
+        'zonas' => fn ($consulta) => $consulta
+            ->where('activo', true)
+            ->whereHas('tarifas', fn ($tarifas) => $tarifas->where('activo', true)),
+        'zonas.tarifas' => fn ($consulta) => $consulta->where('activo', true),
+    ]);
 
     return view('publico.eventos.comprar', compact('evento'));
     }

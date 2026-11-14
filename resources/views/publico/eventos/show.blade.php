@@ -31,11 +31,14 @@
 
 <main class="contenido-evento">
 
-    <div class="pestanas">
+    <div class="pestanas" role="tablist" aria-label="Información del evento">
         <button
             type="button"
             class="pestana activa"
             data-panel="tarifario"
+            role="tab"
+            aria-selected="true"
+            aria-controls="tarifario"
         >
             Tarifario
         </button>
@@ -44,6 +47,9 @@
             type="button"
             class="pestana"
             data-panel="acerca"
+            role="tab"
+            aria-selected="false"
+            aria-controls="acerca"
         >
             Acerca del evento
         </button>
@@ -52,12 +58,15 @@
             type="button"
             class="pestana"
             data-panel="terminos"
+            role="tab"
+            aria-selected="false"
+            aria-controls="terminos"
         >
             Términos y condiciones
         </button>
     </div>
 
-    <section id="tarifario">
+    <section id="tarifario" role="tabpanel">
         <div class="tarifario-visual">
             @if($evento->imagen_plano)
                 <img
@@ -73,7 +82,7 @@
         </div>
     </section>
 
-    <section id="acerca" class="panel-informativo" hidden>
+    <section id="acerca" class="panel-informativo" role="tabpanel" hidden>
         <h2>Acerca del evento</h2>
 
         <h3>{{ $evento->titulo }}</h3>
@@ -104,7 +113,7 @@
         </p>
     </section>
 
-    <section id="terminos" class="panel-informativo" hidden>
+    <section id="terminos" class="panel-informativo" role="tabpanel" hidden>
         <h2>Términos y condiciones</h2>
 
         <p>
@@ -152,9 +161,11 @@
         boton.addEventListener('click', () => {
             document.querySelectorAll('.pestana').forEach(pestana => {
                 pestana.classList.remove('activa');
+                pestana.setAttribute('aria-selected', 'false');
             });
 
             boton.classList.add('activa');
+            boton.setAttribute('aria-selected', 'true');
 
             ['tarifario', 'acerca', 'terminos'].forEach(id => {
                 document.getElementById(id).hidden =

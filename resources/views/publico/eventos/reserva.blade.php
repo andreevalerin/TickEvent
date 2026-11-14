@@ -6,10 +6,38 @@
 
 <main class="compra-contenedor">
 
-    <div class="compra-titulo">
-        <span class="etiqueta">RESERVA DE ENTRADAS</span>
-        <h1>{{ $reserva->evento->titulo }}</h1>
-        <p>Reserva N.º {{ $reserva->id }}</p>
+    <div class="compra-evento-contexto">
+        @if($reserva->evento->imagen_principal)
+            <img src="{{ asset($reserva->evento->imagen_principal) }}" alt="{{ $reserva->evento->titulo }}">
+        @endif
+
+        <div>
+            <span class="etiqueta">RESERVA DE ENTRADAS</span>
+            <h1>{{ $reserva->evento->titulo }}</h1>
+            <p>Reserva N.º {{ $reserva->id }}</p>
+        </div>
+    </div>
+
+    <div class="compra-pasos">
+        <div class="compra-paso activo">
+            <span class="compra-paso-numero">✓</span>
+            <span>Sectores</span>
+        </div>
+        <div class="compra-paso-linea"></div>
+        <div class="compra-paso activo">
+            <span class="compra-paso-numero">✓</span>
+            <span>Tarifa</span>
+        </div>
+        <div class="compra-paso-linea"></div>
+        <div class="compra-paso activo">
+            <span class="compra-paso-numero">3</span>
+            <span>Resumen</span>
+        </div>
+        <div class="compra-paso-linea"></div>
+        <div class="compra-paso {{ $reserva->estado === 'confirmada' ? 'activo' : '' }}">
+            <span class="compra-paso-numero">4</span>
+            <span>Pago</span>
+        </div>
     </div>
 
     @if(session('estado'))
@@ -26,7 +54,7 @@
         </div>
     @endif
 
-    <section class="compra-panel">
+    <section class="compra-panel reserva-panel-principal">
 
         @if($reserva->estado === 'activa')
             <h2>Reserva realizada</h2>

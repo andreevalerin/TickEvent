@@ -5,6 +5,18 @@
 @section('contenido')
 
 <main class="auth-contenedor">
+    <section class="auth-presentacion">
+        <span class="etiqueta">TU CUENTA TICKEVENT</span>
+        <h2>Todo listo para tu próximo evento</h2>
+        <p>Consulta tus reservas y entradas desde un solo lugar.</p>
+
+        <div class="auth-beneficios">
+            <span>Reservas por 15 minutos</span>
+            <span>Entradas asociadas a cada asistente</span>
+            <span>Historial disponible en tu cuenta</span>
+        </div>
+    </section>
+
     <div class="auth-tarjeta">
         <span class="etiqueta">BIENVENIDO A TICKEVENT</span>
 

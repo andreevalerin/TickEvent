@@ -10,33 +10,46 @@
         ← Volver al evento
     </a>
 
-    <div class="compra-titulo">
-        <span class="etiqueta">COMPRA DE ENTRADAS</span>
-        <h1>{{ $evento->titulo }}</h1>
-        <p>
-            {{ $evento->fecha_evento->format('d/m/Y') }}
-            · {{ $evento->fecha_evento->format('H:i') }}
-            · {{ $evento->lugar }}, {{ $evento->ciudad }}
-        </p>
+    <div class="compra-evento-contexto">
+        @if($evento->imagen_principal)
+            <img src="{{ asset($evento->imagen_principal) }}" alt="{{ $evento->titulo }}">
+        @endif
+
+        <div>
+            <span class="etiqueta">COMPRA DE ENTRADAS</span>
+            <h1>{{ $evento->titulo }}</h1>
+            <p>
+                {{ $evento->fecha_evento->format('d/m/Y') }}
+                · {{ $evento->fecha_evento->format('H:i') }}
+                · {{ $evento->lugar }}, {{ $evento->ciudad }}
+            </p>
+        </div>
     </div>
 
     <div class="compra-pasos">
         <div class="compra-paso activo" id="paso-sector">
             <span class="compra-paso-numero">1</span>
-            <span>Sector</span>
+            <span>Sectores</span>
         </div>
 
         <div class="compra-paso-linea"></div>
 
-        <div class="compra-paso" id="paso-asistentes">
+        <div class="compra-paso" id="paso-tarifa">
             <span class="compra-paso-numero">2</span>
-            <span>Asistentes</span>
+            <span>Tarifa</span>
         </div>
 
         <div class="compra-paso-linea"></div>
 
         <div class="compra-paso">
             <span class="compra-paso-numero">3</span>
+            <span>Resumen</span>
+        </div>
+
+        <div class="compra-paso-linea"></div>
+
+        <div class="compra-paso">
+            <span class="compra-paso-numero">4</span>
             <span>Pago</span>
         </div>
     </div>
@@ -62,7 +75,7 @@
         <div class="compra-columnas">
 
             <section class="compra-panel">
-                <h2>Selecciona tu zona</h2>
+                <h2>Selecciona tu zona y tarifa</h2>
 
                 <p>
                     Elige la zona donde deseas disfrutar del evento.
@@ -365,7 +378,10 @@
 
         asistentes.hidden = false;
 
-        document.getElementById('paso-asistentes')
+        document.getElementById('paso-tarifa')
+            .classList.add('activo');
+
+        document.querySelectorAll('.compra-paso')[2]
             .classList.add('activo');
     }
 

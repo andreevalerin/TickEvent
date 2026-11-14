@@ -5,6 +5,18 @@
 @section('contenido')
 
 <main class="auth-contenedor">
+    <section class="auth-presentacion">
+        <span class="etiqueta">TU CUENTA TICKEVENT</span>
+        <h2>Compra entradas con claridad y sin complicaciones</h2>
+        <p>Elige una zona, registra a los asistentes y revisa el total antes de pagar.</p>
+
+        <div class="auth-beneficios">
+            <span>Hasta seis entradas por evento</span>
+            <span>Precios y cargos visibles</span>
+            <span>Entradas nominativas</span>
+        </div>
+    </section>
+
     <div class="auth-tarjeta">
         <span class="etiqueta">ÚNETE A TICKEVENT</span>
 

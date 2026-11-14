@@ -3,27 +3,26 @@
 namespace App\Http\Controllers\Publico;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 
 class PaginaController extends Controller
 {
     public function contacto()
     {
-        return 'Contacto de TickEvent';
+        return view('publico.paginas.contacto');
     }
 
     public function cancelaciones()
     {
-        return 'Política de cancelaciones';
+        return view('publico.paginas.cancelaciones');
     }
 
     public function reembolsos()
     {
-        return 'Política de reembolsos';
+        return view('publico.paginas.reembolsos');
     }
 
     public function cambiosFecha()
     {
-        return 'Política de cambios de fecha';
+        return view('publico.paginas.cambios-fecha');
     }
 }
